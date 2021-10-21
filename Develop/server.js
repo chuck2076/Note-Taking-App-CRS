@@ -1,9 +1,11 @@
 const express = require('express');
 const db = require('./db/db.json');
-const morgan = require('morgan');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
+const { readFromFile, readAndAppend } = require('./helpers/fsUtils');
+const fs = require('fs');
 
-
-const PORT = 3001;
+const PORT = process.env.PORT || 3000;
 
 const app = express();
 
@@ -16,25 +18,32 @@ app.get('/', (req, res) =>
   res.sendFile(path.join(__dirname, '/public/index.html'))
 );
 
-app.get('/', (req, res) =>
+app.get('/notes', (req, res) =>
   res.sendFile(path.join(__dirname, '/public/notes.html'))
 );
 
-app.get('/api/db.json', (req, res) => {
-    console.info(`GET /api/db.json`);
-    res.status(200).json(getNotes);
+// GET request for ALL Notes
+app.get('/api/notes', (req, res) => {
+    //console.info(`GET /api/db.json`);
+    readFromFile('./db/db.json').then((data) =>
+    res.json(JSON.parse(data))
+    )
   });
+    
+    // Send read data to response of 'GET' request
+ 
 
 
-// GET a single note
-app.get('/api/db.json/:takeNotes_id', (req, res) => {
-    if (req.params.getNotes_id) {
+//GET a single note
+app.delete('/api/notes/:id', (req, res) => {
+    if (req.params.id) {
       console.info(`${req.method} request received to get a single a note`);
-      const notesId = req.params.getNotes_id;
-      for (let i = 0; i < getNotes.length; i++) {
-        const currentNote = getNotes[i];
-        if (currentNote.getNotes_id === getNotesId) {
-          res.json(currentNote);
+      const notesId = req.params.id;
+      for (let i = 0; i < db.length; i++) {
+        const currentNote = db[i];
+        if (currentNote.id === notesId) {
+          db.splice(i, 1);
+          res.json(db);
           return;
         }
       }
@@ -43,12 +52,13 @@ app.get('/api/db.json/:takeNotes_id', (req, res) => {
       res.status(400).send('Note ID not provided');
     }
   });
-
+ 
 // POST request to add a note
-app.post('/api/db.json', (req, res) => {
+app.post('/api/notes', (req, res) => {
   // Log that a POST request was received
   console.info(`${req.method} request received to add a note`);
-
+   // Prepare a response object to send back to the client
+   let response;
   // Destructuring assignment for the items in req.body
   const { title, text } = req.body;
 
@@ -58,12 +68,15 @@ app.post('/api/db.json', (req, res) => {
     const newNote = {
       title,
       text,
+      id: uuidv4(),
     };
 
-    const response = {
+    response = {
       status: 'success',
       body: newNote,
     };
+
+    readAndAppend(newNote, './db/db.json');
 
     console.log(response);
     res.status(201).json(response);
@@ -72,4 +85,9 @@ app.post('/api/db.json', (req, res) => {
   }
 });
 
+
+
 //Need a listener
+app.listen(PORT, () =>
+  console.log(`App listening at http://localhost:${PORT} 🚀`)
+);
