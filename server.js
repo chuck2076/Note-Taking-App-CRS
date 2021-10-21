@@ -1,3 +1,4 @@
+//Requiring files to be used
 const express = require('express');
 const db = require('./db/db.json');
 const path = require('path');
@@ -30,11 +31,8 @@ app.get('/api/notes', (req, res) => {
     )
   });
     
-    // Send read data to response of 'GET' request
- 
 
-
-//GET a single note
+//GET a single note to delete
 app.delete('/api/notes/:id', (req, res) => {
     if (req.params.id) {
       console.info(`${req.method} request received to get a single a note`);
@@ -84,8 +82,6 @@ app.post('/api/notes', (req, res) => {
     res.status(500).json('Error in posting Note');
   }
 });
-
-
 
 //Need a listener
 app.listen(PORT, () =>
