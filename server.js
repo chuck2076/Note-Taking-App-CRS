@@ -3,7 +3,7 @@ const express = require('express');
 const db = require('./db/db.json');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
-const { readFromFile, readAndAppend } = require('./helpers/fsUtils');
+const { readFromFile, readAndAppend, deleteAndAppend } = require('./helpers/fsUtils');
 const fs = require('fs');
 
 const PORT = process.env.PORT || 3000;
@@ -37,14 +37,8 @@ app.delete('/api/notes/:id', (req, res) => {
     if (req.params.id) {
       console.info(`${req.method} request received to get a single a note`);
       const notesId = req.params.id;
-      for (let i = 0; i < db.length; i++) {
-        const currentNote = db[i];
-        if (currentNote.id === notesId) {
-          db.splice(i, 1);
-          res.json(db);
-          return;
-        }
-      }
+      deleteAndAppend (notesId, "./db/db.json")
+
       res.status(404).send('Note not found');
     } else {
       res.status(400).send('Note ID not provided');
